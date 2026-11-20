@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from psup_stacplanet.generator import CatalogGenerator
 from psup_stacplanet.inventory import PsupInventory
+from psup_stacplanet.repository import RootCatalogRepository
 
 
 def read_inventory(inventory_file: Path):
@@ -10,5 +10,5 @@ def read_inventory(inventory_file: Path):
 
 
 def create_catalog(inventory_file: Path, root_catalog: Path):
-    generator = CatalogGenerator(PsupInventory(inventory_file), root_catalog)
+    generator = RootCatalogRepository(PsupInventory(inventory_file), root_catalog)
     print(generator)

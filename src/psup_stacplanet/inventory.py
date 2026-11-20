@@ -1,8 +1,10 @@
 import csv
 import re
 from pathlib import Path
+from typing import Literal
 
 from psup_stacplanet.entities import InventoryLine
+from psup_stacplanet.filters import FileExtension, InventoryLineFilter
 
 
 class PsupInventory:
@@ -24,8 +26,16 @@ class PsupInventory:
                     InventoryLine.model_validate({k: v for k, v in zip(headers, row)})
                 )
 
-    def find(self, file_match: str | re.Pattern) -> InventoryLine | set[InventoryLine]:
+    def find(
+        self,
+        file_match: str | re.Pattern,
+        category: Literal["omegacubes", "marsdata"] | None = None,
+        file_extension: FileExtension | None = None,
+    ) -> InventoryLine | set[InventoryLine]:
         inventory_lines = set()
+        line_filter = InventoryLineFilter(
+            file_match, category=category, file_extension=file_extension
+        )
 
         with open(self.csv_file, newline="") as f:
             reader = csv.reader(f)
@@ -35,14 +45,7 @@ class PsupInventory:
                 curr_line = InventoryLine.model_validate(
                     {k: v for k, v in zip(headers, row)}
                 )
-                if (
-                    (
-                        isinstance(file_match, re.Pattern)
-                        and file_match.search(curr_line.file_name) is not None
-                    )
-                    or isinstance(file_match, str)
-                    and curr_line.file_name == file_match
-                ):
+                if line_filter(curr_line) is not None:
                     inventory_lines.add(curr_line)
 
         if len(inventory_lines) == 1:
